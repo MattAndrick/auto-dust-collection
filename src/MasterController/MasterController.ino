@@ -12,14 +12,15 @@
 
 //const int blowerPin = 10;
 //const int chopSawPin = 12;
-const int DEF_DELAY_TIME = 1000;
+//int sensorInputPins[20];
+//int gateOutputPins[20];
+const int DEF_DELAY_TIME = 3000;
 const int CUST_DELAY_TIME = 5000;
-//int sensorInputPins = [20];
-//int gateOutputPins = [20];
 
 //****test code***********
-int sensorInputPins = [1];
-int gateOutputPins = [1];
+const int chopSawPin = 32;
+int sensorInputPins[1];
+int gateOutputPins[1];
 const int blowerPin = 53;
 //************************
 
@@ -36,24 +37,35 @@ void setup() {
 
 //****Test Code***********
   sensorInputPins[0] = 30;
+  pinMode(30, INPUT);
   gateOutputPins[0] = 31;
+  pinMode(31, OUTPUT);
+  pinMode(blowerPin, OUTPUT);
+  Serial.begin(9600);
 //************************
 }
 
 void loop() {
   bool blowerOn = false;
 
+  //Manage Blast Gates State
   for(int i = 0; i < sizeof(sensorInputPins)/sizeof(int); i++){
     int inputState = digitalRead(sensorInputPins[i]);
     int outputState = digitalRead(gateOutputPins[i]);
+    Serial.print("Input: ");
+    Serial.println(inputState);
+
+    Serial.print("Output: ");
+    Serial.println(outputState);
 
     if(inputState == HIGH){
-      if(outputState == LOW){
+      if(outputState == LOW){ //if tool is running and gate is unopened
+        Serial.println("Open gate");
         digitalWrite(gateOutputPins[i], HIGH);
       }
 
       blowerOn = true;
-    } else if(inputState == LOW && outputState == HIGH){
+    } else if(inputState == LOW && outputState == HIGH){ //if tool is turned off and gate is open
       if(sensorInputPins[i] == chopSawPin){
         delay(CUST_DELAY_TIME);
         if(digitalRead(chopSawPin) == LOW){ //tool is still off after delay
@@ -66,10 +78,13 @@ void loop() {
     }
   }
 
+  //Manage Blower State
   if(blowerOn && digitalRead(blowerPin) == LOW){
+    delay(1000);
     digitalWrite(blowerPin, HIGH);
   } else if(!blowerOn && digitalRead(blowerPin) == HIGH){
     digitalWrite(blowerPin, LOW);
   }
-
+  
+  delay(100); //help prevent bouncing
 }
